@@ -18,6 +18,12 @@ end
 assign Q_N = ~Q;
 endmodule
 
+module polyfill__clock_gate(input CLK, GATE, output reg GCLK);
+always @(CLK) begin
+    GCLK = CLK & GATE;
+end
+endmodule
+
 module polyfill__conb(output HI, LO); assign {HI, LO} = 2'b10; endmodule
 module polyfill__buf(input A, output X); assign X = A; endmodule
 module polyfill__inv(input A, output Y); assign Y = ~A; endmodule
@@ -165,8 +171,8 @@ module polyfill__dlxtn(input D, GATE_N, output Q); wire _Q_N; polyfill__universa
 module polyfill__dlxtp(input D, GATE, output Q); wire _Q_N; polyfill__universal_latch ul(.D, .GATE, .RESET_B(1'b1), .Q, .Q_N(_Q_N)); endmodule
 module polyfill__lpflow_inputisolatch(input D, SLEEP_B, output Q); wire _Q_N; polyfill__universal_latch ul(.D, .GATE(SLEEP_B), .RESET_B(1'b1), .Q, .Q_N(_Q_N)); endmodule
 
-module polyfill__dlclkp(input CLK, GATE, output GCLK); wire Q, _Q_N; polyfill__universal_latch ul(.D(GATE), .GATE(~CLK), .RESET_B(1'b1), .Q, .Q_N(_Q_N)); assign GCLK = Q & CLK; endmodule
-module polyfill__sdlclkp(input CLK, GATE, SCE, output GCLK); wire Q, _Q_N; polyfill__universal_latch ul(.D(GATE | SCE), .GATE(~CLK), .RESET_B(1'b1), .Q, .Q_N(_Q_N)); assign GCLK = Q & CLK; endmodule
+module polyfill__dlclkp(input CLK, GATE, output GCLK); polyfill__clock_gate cg(.CLK, .GATE, .GCLK); endmodule
+module polyfill__sdlclkp(input CLK, GATE, SCE, output GCLK); polyfill__clock_gate cg(.CLK, .GATE(GATE | SCE), .GCLK); endmodule
 
 (* noblackbox *) module polyfill__fill(); endmodule
 (* noblackbox *) module polyfill__decap(); endmodule
